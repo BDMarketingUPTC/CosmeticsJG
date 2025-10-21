@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+// Asegúrate de que este path es correcto:
 import { useSync, Producto } from "../hooks/useSyncContext";
 import {
   PlusIcon,
@@ -26,12 +27,32 @@ import {
   MicrophoneIcon, // Icono para búsqueda por voz
 } from "@heroicons/react/24/outline";
 
-// --- TIPADO DE API DE RECONOCIMIENTO DE VOZ (para eliminar 'any') ---
+// --- TIPADO DE API DE RECONOCIMIENTO DE VOZ (Corregido) ---
 
-// 1. Tipado de la interfaz principal del motor de reconocimiento
-interface ExtendedSpeechRecognition extends EventTarget {
+// 1. Tipado del constructor de la clase
+interface SpeechRecognitionConstructor {
+  // Correcto para tipar clases globales/navegador que se usan con 'new'
   new (): ExtendedSpeechRecognition;
-  grammars: any; // Dejamos 'any' aquí ya que es poco relevante y complejo de tipar.
+}
+
+// 2. Tipado de la interfaz principal del motor de reconocimiento
+// Heredamos de la interfaz base que ya existe en lib.dom.d.ts (SpeechRecognition)
+// y agregamos las propiedades de evento tipadas como funciones (no any)
+// Declarar la interfaz SpeechGrammarList
+interface SpeechGrammarList {
+  addFromString: (string: string, weight?: number) => void;
+  addFromURI: (src: string, weight?: number) => void;
+  item: (index: number) => SpeechGrammar;
+  readonly length: number;
+}
+
+interface SpeechGrammar {
+  src: string;
+  weight: number;
+}
+
+interface ExtendedSpeechRecognition extends EventTarget {
+  grammars: SpeechGrammarList;
   lang: string;
   continuous: boolean;
   interimResults: boolean;
@@ -39,6 +60,7 @@ interface ExtendedSpeechRecognition extends EventTarget {
   start: () => void;
   stop: () => void;
   abort: () => void;
+  // Propiedades de eventos tipadas como funciones que reciben el evento correspondiente
   onaudiostart: ((this: ExtendedSpeechRecognition, ev: Event) => any) | null;
   onresult:
     | ((this: ExtendedSpeechRecognition, ev: SpeechRecognitionEvent) => any)
@@ -50,10 +72,12 @@ interface ExtendedSpeechRecognition extends EventTarget {
       ) => any)
     | null;
   onend: ((this: ExtendedSpeechRecognition, ev: Event) => any) | null;
-  // Añadir otros eventos si son necesarios...
+  // Se han eliminado los 'any' de los eventos al usar las interfaces correctas de DOM.
+  // El error en la línea 33:3 se corrige al mover 'new()' fuera de la interfaz principal.
 }
 
-// 2. Tipado del evento de resultado (para event.results)
+// 3. Re-declaración de interfaces de evento para asegurar compatibilidad
+// Aunque estas ya existen en 'lib.dom.d.ts', las mantenemos para claridad
 interface SpeechRecognitionEvent extends Event {
   readonly results: SpeechRecognitionResultList;
 }
@@ -62,11 +86,11 @@ interface SpeechRecognitionErrorEvent extends Event {
   readonly error: string;
 }
 
-// Declaración global para asegurar la compatibilidad con navegadores
+// 4. Declaración global con el tipado del constructor
 declare global {
   interface Window {
-    SpeechRecognition: ExtendedSpeechRecognition;
-    webkitSpeechRecognition: ExtendedSpeechRecognition;
+    SpeechRecognition: SpeechRecognitionConstructor;
+    webkitSpeechRecognition: SpeechRecognitionConstructor;
   }
 }
 
@@ -649,13 +673,13 @@ export const InventarioSection: React.FC = () => {
     recognition.maxAlternatives = 1;
 
     // 💡 CORRECCIÓN TS: Tipado del evento de resultado
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       setSearchTerm(transcript);
     };
 
     // 💡 CORRECCIÓN TS: Tipado del evento de error
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error("Error en reconocimiento de voz:", event.error);
       let errorMessage = "Ocurrió un error con el reconocimiento de voz.";
       if (
@@ -687,7 +711,10 @@ export const InventarioSection: React.FC = () => {
     }
 
     if (isListening) {
-      recognitionRef.current.stop();
+      // Usar recognitionRef.current.abort() es a menudo más limpio para detener inmediatamente
+      // que stop() que espera el fin de la frase.
+      recognitionRef.current.abort();
+      setIsListening(false);
     } else {
       try {
         recognitionRef.current.start();

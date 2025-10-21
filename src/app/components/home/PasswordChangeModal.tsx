@@ -3,6 +3,7 @@ import localforage from "localforage";
 import {
   ArrowPathIcon,
   EnvelopeIcon,
+  InformationCircleIcon,
   KeyIcon,
 } from "@heroicons/react/24/outline";
 

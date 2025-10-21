@@ -70,25 +70,40 @@ const INITIAL_STATE: SyncState = {
   inicializado: false,
   isOnline: true,
 };
+
+// ==================================================================
+// === FUNCIÓN applyTransacciones CORREGIDA =========================
+// ==================================================================
 const applyTransacciones = (
   base: Producto[],
   transacciones: Transaccion[]
 ): Producto[] => {
   const skusModificados = new Set(transacciones.map((tx) => tx.producto.SKU));
-  let final: Producto[] = base
+
+  // 1. Filtrar los productos BASE, excluyendo aquellos con transacciones pendientes (para evitar duplicados).
+  const inventarioBaseFiltrado: Producto[] = base
     .filter((p) => !skusModificados.has(p.SKU))
     .map((p) => {
+      // Eliminar la marca isLocal del inventario base por si acaso
       const { isLocal, ...rest } = p;
       return rest as Producto;
     });
-  transacciones.forEach((tx) => {
-    if (tx.tipo !== "DELETE") {
-      // Marcamos el producto local como pendiente de sincronización
-      final.unshift({ ...tx.producto, isLocal: true });
-    }
-  });
+
+  // 2. Mapear las transacciones pendientes a productos (excluyendo DELETE) y marcarlas como locales.
+  const productosLocales: Producto[] = transacciones
+    .filter((tx) => tx.tipo !== "DELETE")
+    .map((tx) => ({
+      ...tx.producto,
+      isLocal: true, // Marcar como local (pendiente de sincronizar)
+    }));
+
+  // 3. Combinar los dos arrays de forma inmutable. Los productos locales van primero.
+  const final: Producto[] = [...productosLocales, ...inventarioBaseFiltrado];
+
   return final;
 };
+// ==================================================================
+
 const SyncContext = createContext<SyncContextType | undefined>(undefined);
 
 export const SyncProvider = ({ children }: { children: ReactNode }) => {
@@ -207,6 +222,7 @@ export const SyncProvider = ({ children }: { children: ReactNode }) => {
       if (existingIndex !== -1)
         nuevasTransacciones[existingIndex] = transaccion;
       else nuevasTransacciones.push(transaccion);
+
       const nuevoInventarioFinal = applyTransacciones(
         prevState.inventarioBase,
         nuevasTransacciones
