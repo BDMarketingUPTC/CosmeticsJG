@@ -1,103 +1,92 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState } from "react";
+// 💡 CORRECCIÓN: 'localforage' eliminado ya que no se usa directamente aquí.
+// El hook 'useAuthStatus' maneja la interacción con el storage.
+// import localforage from "localforage";
+
+// 💡 Asume que el hook 'useAuthStatus' está en '../hooks/useAuthStatus'
+import useAuthStatus from "../app/hooks/useAuthStatus";
+
+// 💡 Asume que los componentes están en 'components/...'
+import LoginScreen from "../app/components/home/LoginScreen";
+import AdminDashboard from "../app/components/home/AdminDashboard";
+import UserProfileMenu from "../app/components/home/UserProfileMenu";
+import PasswordChangeModal from "../app/components/home/PasswordChangeModal";
+
+const COLORS = {
+  PRIMARY: "#E91E63",
+  BACKGROUND: "#FFF5F8",
+};
+
+const AppPage: React.FC = () => {
+  // Utilizamos el hook para obtener el estado y la función de actualización
+  const { authStatus, isLoadingAuth, setAuth } = useAuthStatus();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Función que se llama al tener éxito en el LoginScreen
+  const handleLoginSuccess = (userData: { username: string }) => {
+    // Actualiza el estado global de autenticación y guarda en localforage
+    setAuth(true, userData.username);
+  };
+
+  // --- Muestra una pantalla de carga mientras verifica el estado offline ---
+  if (isLoadingAuth) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: COLORS.BACKGROUND }}
+      >
+        <p className="text-xl font-medium" style={{ color: COLORS.PRIMARY }}>
+          Cargando Estado de Sesión...
+        </p>
+      </div>
+    );
+  }
+
+  // --- Si NO está autenticado, muestra la Pantalla de Login ---
+  if (!authStatus.isAuthenticated || !authStatus.username) {
+    // La página raíz es la página de Login
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // --- Si está autenticado, muestra el Panel de Control Principal (Home) ---
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      <div
+        className="flex flex-col h-screen overflow-hidden"
+        style={{
+          fontFamily: `'Poppins', sans-serif`,
+          backgroundColor: COLORS.BACKGROUND,
+        }}
+      >
+        {/* Barra Superior con el Menú de Usuario */}
+        <header
+          className="p-4 flex justify-end items-center shadow-md z-10"
+          style={{ backgroundColor: "white" }}
+        >
+          <UserProfileMenu
+            onPasswordChange={() => setIsModalOpen(true)}
+            username={authStatus.username}
+          />
+        </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        {/* Contenido Principal: El Launcher del Dashboard */}
+        <main className="flex-1 overflow-auto">
+          <AdminDashboard />
+        </main>
+      </div>
+
+      {/* Modal de Cambio de Contraseña */}
+      {authStatus.username && (
+        <PasswordChangeModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          username={authStatus.username}
+        />
+      )}
+    </>
   );
-}
+};
+
+export default AppPage;

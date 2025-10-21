@@ -1,26 +1,85 @@
 @import "tailwindcss";
 
+/* ----------------------------------------------------------------------- */
+/* MODOS DE COLOR: Oscuro (Dark) y Claro (Light) */
+/* ----------------------------------------------------------------------- */
+
+/*
+  CONFIGURACIÓN POR DEFECTO (Asumimos Dark Mode para el "Base Root"
+  si Light Mode está definido en la media query. Si el body
+  usa el background del root, ¡este debe ser OSCURO!
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Fondo claro y texto oscuro */
+  --background: #FFFFFF;
+  /* Blanco puro de fondo */
+  --foreground: #1F2937;
+  /* gray-800 para texto */
+
+  /* Colores de marca vibrantes sobre fondo blanco */
+  --color-primary: #EC4899;
+  /* pink-500 */
+  --color-secondary: #E11D48;
+  /* rose-600 */
+  --color-success: #22C55E;
+  /* green-500 */
+  --color-info: #3B82F6;
+  /* blue-500 */
+
+  /* Gradientes, sombras y bordes */
+  --gradient-header-start: #FCE7F6;
+  /* pink-50 (Para encabezados) */
+  --gradient-header-end: #FDDDE6;
+  /* rose-50 */
+  --shadow-base: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --border-color: #FBCFE8;
+  /* pink-200 (Bordes suaves) */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+/*
+  MODO CLARO (LIGHT): Se activa cuando el sistema operativo lo prefiere.
+  AQUÍ usamos los colores blanco y rosa suave del componente de facturación.
+*/
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Fondo claro y texto oscuro */
+    --background: #FFFFFF;
+    /* Blanco puro de fondo */
+    --foreground: #1F2937;
+    /* gray-800 para texto */
+
+    /* Colores de marca vibrantes sobre fondo blanco */
+    --color-primary: #EC4899;
+    /* pink-500 */
+    --color-secondary: #E11D48;
+    /* rose-600 */
+    --color-success: #22C55E;
+    /* green-500 */
+    --color-info: #3B82F6;
+    /* blue-500 */
+
+    /* Gradientes, sombras y bordes */
+    --gradient-header-start: #FCE7F6;
+    /* pink-50 (Para encabezados) */
+    --gradient-header-end: #FDDDE6;
+    /* rose-50 */
+    --shadow-base: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --border-color: #FBCFE8;
+    /* pink-200 (Bordes suaves) */
   }
 }
 
+/* ----------------------------------------------------------------------- */
+/* ESTILOS GLOBALES (USANDO LAS VARIABLES) */
+/* ----------------------------------------------------------------------- */
 body {
+  /* Aplica el color de fondo y de texto del :root, que cambiará */
+  /* automáticamente entre #1A1A1A y #FFFFFF según el modo de color. */
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+
+  /* Se recomienda aplicar una transición para el cambio suave de modo oscuro a claro */
+  transition: background 0.3s ease, color 0.3s ease;
+
+  font-family: var(--font-sans);
 }
