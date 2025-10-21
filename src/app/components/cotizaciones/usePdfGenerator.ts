@@ -1,7 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 // 💡 CORRECCIÓN TS: Importación del tipo HookData de jspdf-autotable para didDrawPage
-import { HookData } from "jspdf-autotable";
 
 // --- Tipos de Datos (Interfaces necesarias para el hook) ---
 
@@ -37,14 +36,14 @@ interface CompanyInfo {
   name: string;
   address: string;
   phone: string;
-  email: string;
-  website: string;
+  /* email: string;
+  website: string;*/
 }
 
 // 💡 CORRECCIÓN TS: Interfaz para tipar el objeto doc con extensiones de autoTable
 // Esto elimina los errores de "Unexpected any" al usar 'putTotalPages' y 'lastAutoTable'.
 interface JsPdfWithAutotable extends jsPDF {
-  putTotalPages?: (totalPages: string) => void;
+  putTotalPages: (pageExpression: string) => jsPDF;
   lastAutoTable: {
     finalY: number;
   };
@@ -52,11 +51,11 @@ interface JsPdfWithAutotable extends jsPDF {
 
 // --- CONSTANTE DE INFORMACIÓN DE LA EMPRESA ---
 const companyInfo: CompanyInfo = {
-  name: "Tu Empresa S.A.S.",
-  address: "Carrera 10 #20-30, Duitama, Boyacá",
-  phone: "+57 310 123 4567",
-  email: "ventas@tuempresa.com",
-  website: "www.tuempresa.com",
+  name: "Cosmetics JG",
+  address: "Calle 15, # 17 70 Local 201, Edificio Eusebio Boada",
+  phone: " 3229365481",
+  /*email: "ventas@cosmetcsjg.com",
+  website: "www.tuempresa.com",*/
 };
 
 // Define el tipo de tupla mutable que jspdf espera para colores RGB
@@ -184,7 +183,8 @@ export const usePdfGenerator = () => {
     doc.setTextColor(...colors.darkText);
     doc.text(companyInfo.address, companyX, headerY + 14);
     doc.text(
-      `${companyInfo.phone} • ${companyInfo.email}`,
+      `${companyInfo.phone} `,
+      //`${companyInfo.phone} • ${companyInfo.email}`,
       companyX,
       headerY + 19
     );
@@ -327,22 +327,18 @@ export const usePdfGenerator = () => {
       },
       margin: { left: pageMargin, right: pageMargin },
       // 💡 CORRECCIÓN 3: Uso del tipo HookData y eliminación de 'data' sin uso (Línea 320).
-      didDrawPage: (hookData: HookData) => {
+      didDrawPage: () => {
         doc.setFontSize(8);
         doc.setTextColor(...colors.secondaryText);
         let str = `Página ${doc.getNumberOfPages()}`;
         // 💡 CORRECCIÓN 4: Uso de tipado correcto para 'doc' (Línea 324).
-        if (doc.putTotalPages) {
-          str = str + " de {totalPages}";
-        }
+        str = str + " de {totalPages}";
         doc.text(str, pageWidth / 2, 287, { align: "center" });
       },
     });
 
     // 💡 CORRECCIÓN 5: Uso de tipado correcto para 'doc' (Línea 331-336).
-    if (doc.putTotalPages) {
-      doc.putTotalPages("{totalPages}");
-    }
+    doc.putTotalPages("{totalPages}");
 
     // --- SECCIÓN DE TOTALES (Mismo código) ---
     // 💡 CORRECCIÓN 6: Uso de tipado correcto para 'doc' (Línea 337).

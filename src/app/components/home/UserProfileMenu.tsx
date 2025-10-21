@@ -16,7 +16,7 @@ const COLORS = {
 };
 
 const useAuth = (username: string | null) => ({
-  user: { name: username || "Usuario", email: "contacto@cosmeticojg.com" },
+  user: { name: username || "Usuario", email: "cosmeticsjg@gmail.com" },
   logout: async () => {
     await localforage.removeItem("userAuth");
     window.location.reload();

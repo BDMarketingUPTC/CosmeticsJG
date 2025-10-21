@@ -26,18 +26,14 @@ import {
   CheckCircleIcon,
   MicrophoneIcon, // Icono para búsqueda por voz
 } from "@heroicons/react/24/outline";
-
-// --- TIPADO DE API DE RECONOCIMIENTO DE VOZ (Corregido) ---
+// --- TIPADO DE API DE RECONOCIMIENTO DE VOZ (Corregido para eliminar 'any') ---
 
 // 1. Tipado del constructor de la clase
 interface SpeechRecognitionConstructor {
-  // Correcto para tipar clases globales/navegador que se usan con 'new'
   new (): ExtendedSpeechRecognition;
 }
 
 // 2. Tipado de la interfaz principal del motor de reconocimiento
-// Heredamos de la interfaz base que ya existe en lib.dom.d.ts (SpeechRecognition)
-// y agregamos las propiedades de evento tipadas como funciones (no any)
 // Declarar la interfaz SpeechGrammarList
 interface SpeechGrammarList {
   addFromString: (string: string, weight?: number) => void;
@@ -60,24 +56,23 @@ interface ExtendedSpeechRecognition extends EventTarget {
   start: () => void;
   stop: () => void;
   abort: () => void;
-  // Propiedades de eventos tipadas como funciones que reciben el evento correspondiente
-  onaudiostart: ((this: ExtendedSpeechRecognition, ev: Event) => any) | null;
+
+  // Propiedades de eventos tipadas con retorno 'void' (o 'undefined') para eliminar 'any'
+  onaudiostart: ((this: ExtendedSpeechRecognition, ev: Event) => void) | null;
   onresult:
-    | ((this: ExtendedSpeechRecognition, ev: SpeechRecognitionEvent) => any)
+    | ((this: ExtendedSpeechRecognition, ev: SpeechRecognitionEvent) => void)
     | null;
   onerror:
     | ((
         this: ExtendedSpeechRecognition,
         ev: SpeechRecognitionErrorEvent
-      ) => any)
+      ) => void)
     | null;
-  onend: ((this: ExtendedSpeechRecognition, ev: Event) => any) | null;
-  // Se han eliminado los 'any' de los eventos al usar las interfaces correctas de DOM.
-  // El error en la línea 33:3 se corrige al mover 'new()' fuera de la interfaz principal.
+  onend: ((this: ExtendedSpeechRecognition, ev: Event) => void) | null;
 }
+// ----------------------------------------------------------------------------------
 
 // 3. Re-declaración de interfaces de evento para asegurar compatibilidad
-// Aunque estas ya existen en 'lib.dom.d.ts', las mantenemos para claridad
 interface SpeechRecognitionEvent extends Event {
   readonly results: SpeechRecognitionResultList;
 }
@@ -94,7 +89,7 @@ declare global {
   }
 }
 
-// --- SISTEMA DE NOTIFICACIÓN TOAST (Reemplazo de alert() en formulario) ---
+// --- SISTEMA DE NOTIFICACIÓN TOAST (sin cambios) ---
 type ToastType = "success" | "error" | "warning";
 
 interface NotificationToastProps {
@@ -150,7 +145,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   );
 };
 
-// --- MODAL DE CONFIRMACIÓN (Reemplazo de confirm() para eliminar) ---
+// --- MODAL DE CONFIRMACIÓN (sin cambios) ---
 interface ConfirmationDialogProps {
   message: string;
   itemName: string;
@@ -199,7 +194,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   );
 };
 
-// --- Componente de Modal Ultra Profesional y Responsivo (Modificado para usar Toast) ---
+// --- Componente de Modal Ultra Profesional y Responsivo (sin cambios de lógica) ---
 interface ProductFormProps {
   productoInicial?: Producto;
   onSave: (producto: Producto) => void;

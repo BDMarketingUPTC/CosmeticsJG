@@ -84,8 +84,8 @@ const applyTransacciones = (
   const inventarioBaseFiltrado: Producto[] = base
     .filter((p) => !skusModificados.has(p.SKU))
     .map((p) => {
-      // Eliminar la marca isLocal del inventario base por si acaso
-      const { isLocal, ...rest } = p;
+      // **CORRECCIÓN:** Renombrar a _isLocal para evitar la advertencia de 'no usada'
+      const { isLocal: _isLocal, ...rest } = p;
       return rest as Producto;
     });
 

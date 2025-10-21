@@ -329,7 +329,7 @@ export const FacturacionSection: React.FC = () => {
       {
         ...producto,
         invoiceQuantity: 1,
-        invoicePrice: producto["PRECIO VENTA"],
+        invoicePrice: producto["PRECIO VENTA"] ?? 0,
       },
     ]);
     setSearchTerm("");
@@ -391,7 +391,7 @@ export const FacturacionSection: React.FC = () => {
         const productoActualizado = {
           ...productoOriginal,
           "Cantidad unds":
-            productoOriginal["Cantidad unds"] - item.invoiceQuantity,
+            (productoOriginal["Cantidad unds"] ?? 0) - item.invoiceQuantity,
         };
         registrarTransaccionLocal({
           id: item.SKU,
@@ -631,7 +631,7 @@ export const FacturacionSection: React.FC = () => {
               ) : (
                 invoiceItems.map((item) => {
                   const hasExceededStock =
-                    item.invoiceQuantity > item["Cantidad unds"];
+                    item.invoiceQuantity > (item["Cantidad unds"] ?? 0);
                   return (
                     <div
                       key={item.SKU}
