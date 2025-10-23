@@ -38,7 +38,7 @@ export default function RootLayout({
       >
         <SyncProvider>
           <main>{children}</main>
-          <StatusIndicator />
+          {/* <StatusIndicator /> */}
         </SyncProvider>
       </body>
     </html>

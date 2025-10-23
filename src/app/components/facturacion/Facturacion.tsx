@@ -2,10 +2,18 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-// Importamos el hook de sync
-// 💡 CORRECCIÓN 1: Se eliminó 'Transaccion' de la importación para corregir el warning.
-import { useSync, Producto } from "../../hooks/useSyncContext";
-import { useInvoicePdf } from "./useInvoicePdf"; // Importamos el nuevo hook
+
+// --- Importaciones de Lógica Central y Hooks ---
+import { useSync, Producto } from "../../hooks/useSyncContext"; // Importamos el hook de sync y Producto
+
+// Importamos la lógica de PDF y sus tipos necesarios
+import {
+  useInvoicePdfReciboCaja,
+  InvoicePreviewData,
+  ClientData,
+  InvoiceItemData, // Reutilizamos esta interfaz para la definición local
+} from "./useInvoicePdfReciboCaja";
+
 import {
   PlusIcon,
   TrashIcon,
@@ -26,11 +34,12 @@ import {
 const GAS_INVOICE_URL =
   "https://script.google.com/macros/s/AKfycbwT6zmORFCtqULLvxasiNYJcqjkjhP8QDNmFBMXdddIA-LyPXA8NuGkktnybiSg5q6gJw/exec";
 
-// --- Interfaces (Mantenidas aquí ya que son necesarias para el estado local) ---
-interface InvoiceItem extends Producto {
-  invoiceQuantity: number;
-  invoicePrice: number;
-}
+// --- Interfaces ---
+// Combina Producto y los campos necesarios para la factura (invoiceQuantity, invoicePrice)
+interface InvoiceItem extends Producto, InvoiceItemData {}
+// Alias para mantener la coherencia con el hook de PDF
+interface ClientState extends ClientData {}
+
 interface Factura {
   ID_FACTURA: string;
   Fecha: string;
@@ -39,20 +48,9 @@ interface Factura {
   Productos: { nombre: string; cantidad: number; precio: number }[];
   "Total Facturado": number;
 }
-interface InvoicePreviewData {
-  blobUrl: string;
-  quoteNumber: string;
-  fileName: string;
-}
-interface ClientState {
-  name: string;
-  company: string;
-  email: string;
-}
 
-// --- MODALES (Mantenidos en el archivo principal para el renderizado) ---
+// --- MODALES ---
 
-// MODAL DE CONFIRMACIÓN DE FACTURA (Basado en PdfViewerModal)
 const InvoiceConfirmationModal: React.FC<{
   blobUrl: string;
   quoteNumber: string;
@@ -60,7 +58,6 @@ const InvoiceConfirmationModal: React.FC<{
   onConfirm: () => void;
   isConfirming: boolean;
 }> = ({ blobUrl, quoteNumber, onClose, onConfirm, isConfirming }) => {
-  // ... (El cuerpo del modal se mantiene igual)
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col border border-pink-100/50">
@@ -117,12 +114,10 @@ const InvoiceConfirmationModal: React.FC<{
   );
 };
 
-// MODAL DE HISTORIAL DE FACTURAS (Mantenido igual)
 const HistoryModal: React.FC<{
   history: Factura[];
   onClose: () => void;
 }> = ({ history, onClose }) => {
-  // ... (El cuerpo del modal se mantiene igual)
   const router = useRouter();
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-300">
@@ -186,7 +181,7 @@ const HistoryModal: React.FC<{
         </div>
         <footer className="p-4 border-t border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50 rounded-b-2xl flex justify-end">
           <button
-            onClick={() => router.push("/Datos")} // Ajusta esta ruta si es necesario
+            onClick={() => router.push("/Datos")}
             className="flex items-center gap-2 px-4 py-2 text-sm bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition shadow-md hover:shadow-lg"
           >
             Ver Historial Completo <ArrowRightIcon className="w-4 h-4" />
@@ -197,13 +192,11 @@ const HistoryModal: React.FC<{
   );
 };
 
-// MODAL DE NOTIFICACIÓN REUTILIZABLE (Mantenido igual)
 const NotificationModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   message: string;
 }> = ({ isOpen, onClose, message }) => {
-  // ... (El cuerpo del modal se mantiene igual)
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] animate-in fade-in duration-300">
@@ -251,7 +244,7 @@ export const FacturacionSection: React.FC = () => {
   const [invoicePreviewData, setInvoicePreviewData] =
     useState<InvoicePreviewData | null>(null);
 
-  // --- CÁLCULOS (Mantenidos) ---
+  // --- CÁLCULOS ---
   const { subtotal, iva, total } = useMemo(() => {
     const sub = invoiceItems.reduce(
       (acc, item) => acc + item.invoicePrice * item.invoiceQuantity,
@@ -261,8 +254,8 @@ export const FacturacionSection: React.FC = () => {
     return { subtotal: sub, iva: tax, total: sub + tax };
   }, [invoiceItems, applyIVA]);
 
-  // --- LLAMADA AL HOOK DE PDF (¡EL CAMBIO CLAVE!) ---
-  const { generatePdf } = useInvoicePdf(
+  // 🚨 LLAMADA AL HOOK DE PDF SEPARADO
+  const { generatePdf } = useInvoicePdfReciboCaja(
     invoiceItems,
     client,
     subtotal,
@@ -271,7 +264,7 @@ export const FacturacionSection: React.FC = () => {
     applyIVA
   );
 
-  // --- LÓGICA DE SINCRONIZACIÓN DE FACTURAS PENDIENTES (Mantenida) ---
+  // --- LÓGICA DE SINCRONIZACIÓN DE FACTURAS PENDIENTES ---
   const syncPendingInvoices = useCallback(async () => {
     const pending = JSON.parse(localStorage.getItem("pendingInvoices") || "[]");
     if (pending.length === 0 || !isOnline) return;
@@ -279,7 +272,7 @@ export const FacturacionSection: React.FC = () => {
     console.log(
       `[Sync] Conexión restaurada. Enviando ${pending.length} facturas pendientes...`
     );
-    // 💡 CORRECCIÓN 2: Se cambió 'let' por 'const' para corregir el error 'prefer-const'.
+
     const failedInvoices = [];
 
     for (const factura of pending) {
@@ -307,7 +300,7 @@ export const FacturacionSection: React.FC = () => {
     }
   }, [isOnline]);
 
-  // Cargar historial y sincronizar pendientes al inicio (Mantenidos)
+  // Cargar historial y sincronizar pendientes al inicio
   useEffect(() => {
     const savedHistory = localStorage.getItem("invoiceHistory");
     if (savedHistory) {
@@ -321,7 +314,7 @@ export const FacturacionSection: React.FC = () => {
     return () => window.removeEventListener("online", syncPendingInvoices);
   }, [syncPendingInvoices]);
 
-  // --- Handlers (Mantenidos) ---
+  // --- Handlers ---
   const handleAddProduct = (producto: Producto) => {
     if (invoiceItems.find((item) => item.SKU === producto.SKU)) return;
     setInvoiceItems((prev) => [
@@ -354,7 +347,7 @@ export const FacturacionSection: React.FC = () => {
     setClient({ ...client, [e.target.name]: e.target.value });
   };
 
-  // --- Filtrado (Mantenido) ---
+  // --- Filtrado ---
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return [];
     const lower = searchTerm.toLowerCase();
@@ -368,10 +361,10 @@ export const FacturacionSection: React.FC = () => {
       .slice(0, 15);
   }, [searchTerm, inventario]);
 
-  // --- FUNCIÓN PARA GENERAR VISTA PREVIA (¡SIMPLIFICADA!) ---
+  // --- FUNCIÓN PARA GENERAR VISTA PREVIA ---
   const handleGeneratePreview = async () => {
     try {
-      const data = await generatePdf(); // Llamada al hook
+      const data = await generatePdf(); // Llamada al hook separado
       setInvoicePreviewData(data);
     } catch (error) {
       console.error("Error al generar el PDF:", error);
@@ -379,7 +372,7 @@ export const FacturacionSection: React.FC = () => {
     }
   };
 
-  // --- FUNCIÓN PARA CONFIRMAR LA VENTA (Mantenida) ---
+  // --- FUNCIÓN PARA CONFIRMAR LA VENTA ---
   const handleConfirmAndProcessSale = async () => {
     if (isConfirmingSale) return;
     setIsConfirmingSale(true);
@@ -468,11 +461,10 @@ export const FacturacionSection: React.FC = () => {
     setIsConfirmingSale(false);
   };
 
-  // --- RENDER (Mantenido) ---
+  // --- RENDER ---
   if (!inicializado) {
     return (
       <div className="flex items-center justify-center py-20">
-        {/* Usando el icono de carga de heroicons para consistencia */}
         <ArrowPathIcon className="w-10 h-10 text-pink-600 animate-spin" />
         <p className="ml-3 text-lg font-semibold text-gray-700">
           Cargando inventario...
@@ -529,7 +521,6 @@ export const FacturacionSection: React.FC = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 bg-white/80 transition-all duration-200"
               />
-              {/* ... (icono de búsqueda) ... */}
             </div>
             <div className="overflow-y-auto max-h-[400px]">
               {searchTerm && filteredProducts.length > 0 && (
@@ -637,7 +628,6 @@ export const FacturacionSection: React.FC = () => {
                       key={item.SKU}
                       className="flex items-center bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 group"
                     >
-                      {/* ... (Icono, Título, Ref...) ... */}
                       <div className="flex-1 ml-4 min-w-0">
                         <h4 className="font-semibold text-gray-900 truncate">
                           {item["NOMBRE PRODUCTO"]}
@@ -740,6 +730,7 @@ export const FacturacionSection: React.FC = () => {
                 <BuildingOffice2Icon className="w-5 h-5 mr-2 text-pink-600" />
                 2. Datos del Cliente
               </h3>
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -825,7 +816,7 @@ export const FacturacionSection: React.FC = () => {
                 </div>
               </div>
 
-              {/* --- BOTÓN DE GENERAR (Acción actualizada) --- */}
+              {/* --- BOTÓN DE GENERAR --- */}
               <button
                 onClick={handleGeneratePreview}
                 disabled={invoiceItems.length === 0 || isConfirmingSale}
