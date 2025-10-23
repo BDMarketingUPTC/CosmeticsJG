@@ -2,7 +2,6 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Poppins, Playfair_Display } from "next/font/google"; // 1. Importa las nuevas fuentes
 import { SyncProvider } from "./hooks/useSyncContext";
-import { StatusIndicator } from "./components/StatusIndicator";
 
 // 2. Define y configura las instancias de las fuentes
 // Fuente Sans (Poppins) - Usada para el cuerpo del texto
@@ -38,7 +37,6 @@ export default function RootLayout({
       >
         <SyncProvider>
           <main>{children}</main>
-          {/* <StatusIndicator /> */}
         </SyncProvider>
       </body>
     </html>

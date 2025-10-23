@@ -38,7 +38,6 @@ const GAS_INVOICE_URL =
 // Combina Producto y los campos necesarios para la factura (invoiceQuantity, invoicePrice)
 interface InvoiceItem extends Producto, InvoiceItemData {}
 // Alias para mantener la coherencia con el hook de PDF
-interface ClientState extends ClientData {}
 
 interface Factura {
   ID_FACTURA: string;
@@ -226,7 +225,7 @@ export const FacturacionSection: React.FC = () => {
 
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [client, setClient] = useState<ClientState>({
+  const [client, setClient] = useState<ClientData>({
     name: "",
     company: "",
     email: "",

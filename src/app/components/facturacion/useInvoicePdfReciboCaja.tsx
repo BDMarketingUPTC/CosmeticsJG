@@ -77,9 +77,8 @@ export async function generateThermalReceiptPdfCore(
 ): Promise<InvoicePreviewData> {
   if (invoiceItems.length === 0) {
     return Promise.reject(new Error("No hay productos para facturar."));
-  }
+  } // --- PREPARACIÓN DE DATOS ---
 
-  // --- PREPARACIÓN DE DATOS ---
   const finalClientName = client.name.trim() || "Cliente Preferencial";
   const now = new Date();
   const dateShort = now.toLocaleDateString("es-CO");
@@ -91,18 +90,16 @@ export async function generateThermalReceiptPdfCore(
     -6
   )}`;
   const safeClientName = (client.name || "Cliente").replace(/[^a-z0-9]/gi, "_");
-  const fileName = `Recibo_${quoteNumber}_${safeClientName}.pdf`;
+  const fileName = `Recibo_${quoteNumber}_${safeClientName}.pdf`; // --- INICIALIZACIÓN DEL DOCUMENTO ---
 
-  // --- INICIALIZACIÓN DEL DOCUMENTO ---
   const doc = new jsPDF({
     unit: "mm",
     format: [RECEIPT_WIDTH_MM, 300],
     orientation: "portrait",
   }) as JsPdfWithMinimalConfig;
 
-  let currentY = MARGIN_MM + 4; // Buen margen inicial (4mm)
+  let currentY = MARGIN_MM + 4; // Buen margen inicial (4mm) // Funciones de utilidad para dibujar texto
 
-  // Funciones de utilidad para dibujar texto
   const centerText = (
     text: string,
     size: number,
@@ -140,14 +137,11 @@ export async function generateThermalReceiptPdfCore(
     centerText(char, FONT_SIZE_XSMALL);
     currentY -= LINE_HEIGHT;
     currentY += HALF_LINE;
-  };
-
-  // --- 1. ENCABEZADO DE LA EMPRESA (Compactado) ---
+  }; // --- 1. ENCABEZADO DE LA EMPRESA (Compactado) ---
 
   separatorLine(SEPARATOR_EQUAL);
-  currentY += HALF_LINE * 0.5; // 🚨 Menos espacio después de la línea superior
+  currentY += HALF_LINE * 0.5; // 🚨 Menos espacio después de la línea superior // Colocar Imagen/Logo
 
-  // Colocar Imagen/Logo
   if (LOGO_BASE64) {
     const logoX = RECEIPT_WIDTH_MM / 2 - LOGO_SIZE_MM / 2;
     doc.addImage(
@@ -170,13 +164,11 @@ export async function generateThermalReceiptPdfCore(
     "RECIBO DE CAJA / FACTURA SIMPLIFICADA",
     FONT_SIZE_SMALL_TINY,
     "bold"
-  );
+  ); // Dirección destacada
 
-  // Dirección destacada
   currentY -= HALF_LINE * 0.5;
-  centerText(COMPANY_INFO_RECEIPT.address, FONT_SIZE_ADDRESS, "bold");
+  centerText(COMPANY_INFO_RECEIPT.address, FONT_SIZE_ADDRESS, "bold"); // Datos secundarios compactos
 
-  // Datos secundarios compactos
   currentY -= HALF_LINE * 0.5;
   centerText(`Tel: ${COMPANY_INFO_RECEIPT.phone}`, FONT_SIZE_SMALL_TINY);
 
@@ -187,9 +179,8 @@ export async function generateThermalReceiptPdfCore(
   centerText(`${dateShort} ${timeShort}`, FONT_SIZE_SMALL_TINY);
 
   currentY += HALF_LINE * 0.5; // 🚨 Menos espacio antes de la línea inferior
-  separatorLine(SEPARATOR_EQUAL);
+  separatorLine(SEPARATOR_EQUAL); // --- 2. DETALLES DE LA TRANSACCIÓN ---
 
-  // --- 2. DETALLES DE LA TRANSACCIÓN ---
   currentY += HALF_LINE;
 
   doc.setFont("helvetica", "bold");
@@ -197,9 +188,7 @@ export async function generateThermalReceiptPdfCore(
   currentY += HALF_LINE;
 
   printLeft(`Cliente: ${finalClientName}`, FONT_SIZE_NORMAL);
-  currentY += LINE_HEIGHT;
-
-  // --- 3. TABLA DE PRODUCTOS ---
+  currentY += LINE_HEIGHT; // --- 3. TABLA DE PRODUCTOS ---
 
   const PADDING_QTY = MARGIN_MM + 1;
   const PADDING_DESC_START = MARGIN_MM + 8;
@@ -225,43 +214,40 @@ export async function generateThermalReceiptPdfCore(
     const totalItemFormatted = totalItem.toLocaleString(
       "es-CO",
       CURRENCY_FORMAT_OPTIONS
-    );
+    ); // Línea 1: Cantidad + Producto
 
-    // Línea 1: Cantidad + Producto
     doc.setFontSize(FONT_SIZE_NORMAL);
 
     doc.text(item.invoiceQuantity.toString(), PADDING_QTY, currentY);
     doc.text(item["NOMBRE PRODUCTO"], PADDING_DESC_START, currentY);
-    currentY += LINE_HEIGHT * 0.8;
+    currentY += LINE_HEIGHT * 0.8; // Línea 2: Detalle de Precio Unitario y TOTAL
 
-    // Línea 2: Detalle de Precio Unitario y TOTAL
     doc.setFontSize(FONT_SIZE_XSMALL);
     doc.setFont("helvetica", "normal");
 
     const qtyPriceText = `@ ${itemPriceFormatted} Und.`;
-    doc.text(qtyPriceText, PADDING_DESC_START, currentY);
+    doc.text(qtyPriceText, PADDING_DESC_START, currentY); // Simulación de puntos
 
-    // Simulación de puntos
-    const descWidth = doc.getTextWidth(qtyPriceText);
-    let dotStart = PADDING_DESC_START + descWidth + 0.5;
+    const descWidth = doc.getTextWidth(qtyPriceText); // CORRECCIÓN: Cambiado 'let' a 'const'
+    const dotStart = PADDING_DESC_START + descWidth + 0.5;
 
     doc.setFontSize(FONT_SIZE_XSMALL);
     doc.setFont("helvetica", "normal");
 
-    const totalWidth = doc.getTextWidth(totalItemFormatted);
-    let dotEnd = PADDING_PRICE_END - totalWidth - 0.5;
+    const totalWidth = doc.getTextWidth(totalItemFormatted); // CORRECCIÓN: Cambiado 'let' a 'const'
+    const dotEnd = PADDING_PRICE_END - totalWidth - 0.5;
 
     if (dotEnd > dotStart) {
-      let dots = SEPARATOR_DOT.substring(
+      // CORRECCIÓN: Cambiado 'let' a 'const'
+      const dots = SEPARATOR_DOT.substring(
         0,
         Math.floor((dotEnd - dotStart) / doc.getTextWidth("."))
       );
       if (dots.length > 0) {
         doc.text(dots, dotStart, currentY);
       }
-    }
+    } // Imprimir Total del Artículo (Negrita)
 
-    // Imprimir Total del Artículo (Negrita)
     doc.setFontSize(FONT_SIZE_NORMAL);
     doc.setFont("helvetica", "bold");
     doc.text(totalItemFormatted, PADDING_PRICE_END, currentY, {
@@ -269,15 +255,12 @@ export async function generateThermalReceiptPdfCore(
     });
 
     currentY += LINE_HEIGHT * 1.5;
-  }
-
-  // --- 4. SECCIÓN DE TOTALES ---
+  } // --- 4. SECCIÓN DE TOTALES ---
 
   currentY -= HALF_LINE;
   separatorLine(SEPARATOR_DASH);
-  currentY += HALF_LINE;
+  currentY += HALF_LINE; // Subtotal
 
-  // Subtotal
   doc.setFontSize(FONT_SIZE_NORMAL);
   printLeft("Subtotal:", FONT_SIZE_NORMAL, "normal", MARGIN_MM + 8);
   doc.setFont("helvetica", "bold");
@@ -299,9 +282,8 @@ export async function generateThermalReceiptPdfCore(
 
   currentY += LINE_HEIGHT * 0.5;
   separatorLine(SEPARATOR_EQUAL);
-  currentY += LINE_HEIGHT;
+  currentY += LINE_HEIGHT; // TOTAL FINAL (Máximo impacto)
 
-  // TOTAL FINAL (Máximo impacto)
   doc.setFontSize(FONT_SIZE_LARGE + 2);
   centerText("TOTAL A PAGAR:", FONT_SIZE_LARGE + 2, "bold");
 
@@ -311,17 +293,14 @@ export async function generateThermalReceiptPdfCore(
     FONT_SIZE_LARGE + 5,
     "bold"
   );
-  currentY += LINE_HEIGHT * 2;
-
-  // --- 5. PIE DE PÁGINA Y AGRADECIMIENTO (Persuasivo) ---
+  currentY += LINE_HEIGHT * 2; // --- 5. PIE DE PÁGINA Y AGRADECIMIENTO (Persuasivo) ---
 
   centerText("TRANSACCIÓN AL CONTADO", FONT_SIZE_NORMAL, "bold");
 
   currentY -= HALF_LINE;
   separatorLine(SEPARATOR_DASH);
-  currentY += HALF_LINE;
+  currentY += HALF_LINE; // Mensaje Persuasivo
 
-  // Mensaje Persuasivo
   centerText(
     `¡Gracias por tu compra, ${finalClientName.split(" ")[0]}!`,
     FONT_SIZE_NORMAL,
@@ -331,9 +310,8 @@ export async function generateThermalReceiptPdfCore(
     "Vuelve pronto, siempre es un placer atenderte.",
     FONT_SIZE_NORMAL
   );
-  currentY += LINE_HEIGHT;
+  currentY += LINE_HEIGHT; // 6. **Generar Blob y devolver datos**
 
-  // 6. **Generar Blob y devolver datos**
   const pdfBlob = doc.output("blob");
   const pdfUrl = URL.createObjectURL(pdfBlob);
 
