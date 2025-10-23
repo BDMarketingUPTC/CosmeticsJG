@@ -227,7 +227,7 @@ export const DashboardLayout: React.FC<{
                   <CubeIcon className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-lg sm:text-xl font-bold text-gray-800 leading-tight">
-                  Sistema de gestión <br className="sm:hidden" />
+                  Sistema de gestión <br className="sm:hidden" /> <br />
                   <span className="text-pink-600">Cosmetics JG Duitama</span>
                 </h1>
               </div>

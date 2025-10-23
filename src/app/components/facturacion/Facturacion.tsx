@@ -181,7 +181,7 @@ const HistoryModal: React.FC<{
         </div>
         <footer className="p-4 border-t border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50 rounded-b-2xl flex justify-end">
           <button
-            onClick={() => router.push("/Datos")}
+            onClick={() => router.push("/Facturacion")}
             className="flex items-center gap-2 px-4 py-2 text-sm bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition shadow-md hover:shadow-lg"
           >
             Ver Historial Completo <ArrowRightIcon className="w-4 h-4" />

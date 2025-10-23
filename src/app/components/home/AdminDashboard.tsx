@@ -148,7 +148,7 @@ const App: React.FC = () => {
       }}
     >
       {/* Encabezado Elegante y Marca */}
-      <header className="text-center mb-12 lg:mb-16 max-w-4xl pt-8">
+      <header className="text-center  lg:mb-16 max-w-4xl ">
         <p
           className="text-base font-semibold uppercase tracking-widest mb-1"
           style={{ color: COLORS.PRIMARY_ACCENT }}
@@ -165,7 +165,7 @@ const App: React.FC = () => {
           className="text-xl font-medium opacity-80"
           style={{ color: COLORS.TEXT_SECONDARY }}
         >
-          Cosmético JG Duitama
+          Cosmétics JG Duitama
         </h2>
         <p
           className="mt-4 text-lg opacity-75"
@@ -185,15 +185,24 @@ const App: React.FC = () => {
 
       {/* Footer (Mock) */}
       <footer
-        className="mt-20 pt-8 border-t w-full max-w-6xl text-center"
+        className="mt-20 pt-10 pb-6 border-t w-full max-w-6xl mx-auto text-center text-sm"
         style={{ borderColor: COLORS.BORDER }}
       >
-        <p
-          className="text-sm opacity-70"
-          style={{ color: COLORS.TEXT_SECONDARY }}
-        >
-          &copy; {new Date().getFullYear()} Cosmético JG Duitama | Todos los
-          derechos reservados
+        <p className="opacity-70 mb-2" style={{ color: COLORS.TEXT_SECONDARY }}>
+          &copy; {new Date().getFullYear()} Cosmétics JG Duitama — Todos los
+          derechos reservados.
+        </p>
+        <p className="text-xs" style={{ color: COLORS.TEXT_SECONDARY }}>
+          Desarrollado con por{" "}
+          <a
+            href="https://briamtorres.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold hover:underline hover:text-blue-500 transition-colors"
+            style={{ color: COLORS.TEXT_MAIN }}
+          >
+            Briam Torres & Cromneon
+          </a>
         </p>
       </footer>
     </div>

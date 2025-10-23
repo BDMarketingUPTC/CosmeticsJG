@@ -97,7 +97,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           className="text-xl font-medium text-center mb-8"
           style={{ color: COLORS.ACCENT }}
         >
-          Cosmético JG Duitama
+          Cosmétics JG Duitama
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">

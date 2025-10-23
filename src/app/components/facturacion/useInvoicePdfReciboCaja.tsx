@@ -80,7 +80,7 @@ export async function generateThermalReceiptPdfCore(
   }
 
   // --- PREPARACIÓN DE DATOS ---
-  const finalClientName = client.name.trim() || "Consumidor Final";
+  const finalClientName = client.name.trim() || "Cliente Preferencial";
   const now = new Date();
   const dateShort = now.toLocaleDateString("es-CO");
   const timeShort = now.toLocaleTimeString("es-CO", {
